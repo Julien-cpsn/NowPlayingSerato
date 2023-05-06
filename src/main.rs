@@ -81,8 +81,6 @@ fn main() {
                 continue
             }
 
-            //println!("{}, {}, {}, {}", song_title_start.unwrap(), song_artist_start.unwrap(), song_style_start.unwrap(), song_end.unwrap());
-
             let track = get_track(
                 raw_track,
                 song_title_start.unwrap(),
@@ -92,15 +90,6 @@ fn main() {
             );
 
             tracks.push(track);
-
-            /*
-            let mut track: Track = Track {
-                raw_data: String::from(raw_track),
-                title: raw_track[song_title_start.unwrap() + BYTES_TO_SKIP..song_artist_start.unwrap()].replace("\x00", ""),
-                artist: raw_track[song_artist_start.unwrap() + BYTES_TO_SKIP..song_style_start.unwrap()].replace("\x00", ""),
-                style: raw_track[song_style_start.unwrap() + BYTES_TO_SKIP..song_end.unwrap()].replace("\x00", ""),
-            };*/
-
         }
 
 
