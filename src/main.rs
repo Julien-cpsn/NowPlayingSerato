@@ -1,14 +1,12 @@
-use std::fmt::{Debug, Display, Formatter, write};
+use std::fmt::{Debug, Display, Formatter};
 use std::fs;
 use std::fs::{File};
 use std::io::Read;
 use std::path::{PathBuf};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
-use substring::Substring;
 
 struct Track {
-    raw_data: String,
     title: String,
     artist: String,
     style: String
@@ -28,18 +26,6 @@ impl Display for Track {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} — {} — {}", &self.title, &self.artist, &self.style)
     }
-}
-
-macro_rules! attempt {
-   (@recurse ($a:expr) { } catch ($e:ident) $b:block) => {
-      if let Err ($e) = $a $b
-   };
-   (@recurse ($a:expr) { $e:expr; $($tail:tt)* } $($handler:tt)*) => {
-      attempt!{@recurse ($a.and_then (|_| $e)) { $($tail)* } $($handler)*}
-   };
-   ({ $e:expr; $($tail:tt)* } $($handler:tt)*) => {
-      attempt!{@recurse ($e) { $($tail)* } $($handler)* }
-   };
 }
 
 const SONG_TITLE_START_BYTES: &str = "\x00\x00\x00\x00\x06";
@@ -161,7 +147,6 @@ fn get_track(raw_track: &str, song_title_start: usize, song_artist_start: usize,
     }
 
     Track {
-        raw_data: String::from(raw_track),
         title,
         artist,
         style,
