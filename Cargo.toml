@@ -2,3 +2,7 @@
 name = "now-playing-serato"
 version = "0.1.0"
 edition = "2021"
+
+[dependencies]
+colored = "2.0.4"
+encoding_rs = "0.8.32"

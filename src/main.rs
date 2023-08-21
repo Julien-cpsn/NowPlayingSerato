@@ -5,6 +5,7 @@ use std::io::Read;
 use std::path::{PathBuf};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
+use colored::Colorize;
 
 struct Track {
     title: String,
@@ -24,7 +25,7 @@ impl Debug for Track {
 
 impl Display for Track {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} — {} — {}", &self.title, &self.artist, &self.style)
+        write!(f, "{}", format!(" {:70}\n {:70}", &self.title.bold(), &self.artist).on_truecolor(0, 255, 0))
     }
 }
 
@@ -64,7 +65,11 @@ fn main() {
         file.read_to_end(&mut content).expect("Cannot read file");
 
         let stringed_content = latin1_to_string(content.as_slice());
-        let raw_tracks = stringed_content.split("oent").collect::<Vec<&str>>();
+        let raw_tracks = stringed_content.split("oent")
+            .map(|data| {
+                data.replace(|c: char| !c.is_ascii(), "*")
+            })
+            .collect::<Vec<String>>();
 
         let mut song_title_start: Option<usize>;
         let mut song_artist_start: Option<usize>;
@@ -77,15 +82,15 @@ fn main() {
             song_style_start = raw_track.find(SONG_STYLE_START_BYTES);
             song_end = raw_track.find(SONG_END_BYTES);
 
-            if song_title_start.is_none() || song_artist_start.is_none() || song_style_start.is_none() || song_end.is_none() {
+            if song_title_start.is_none() || song_end.is_none() {
                 continue
             }
 
             let track = get_track(
                 raw_track,
                 song_title_start.unwrap(),
-                song_artist_start.unwrap(),
-                song_style_start.unwrap(),
+                song_artist_start,
+                song_style_start,
                 song_end.unwrap()
             );
 
@@ -108,31 +113,43 @@ fn latin1_to_string(s: &[u8]) -> String {
     s.iter().map(|&c| c as char).collect()
 }
 
-fn get_track(raw_track: &str, song_title_start: usize, song_artist_start: usize, song_style_start: usize, song_end: usize) -> Track {
-    let title: String;
-    let artist: String;
-    let style: String;
+fn get_track(raw_track: String, song_title_start: usize, song_artist_start: Option<usize>, song_style_start: Option<usize>, song_end: usize) -> Track {
+    let mut title = String::new();
+    let mut artist = String::new();
+    let mut style = String::new();
 
-    if song_title_start + BYTES_TO_SKIP < song_artist_start {
-        title = raw_track[song_title_start + BYTES_TO_SKIP..song_artist_start].replace("\x00", "");
+
+    if song_style_start.is_some() {
+        if song_title_start + BYTES_TO_SKIP < song_artist_start.unwrap() {
+            title = raw_track[song_title_start + BYTES_TO_SKIP..song_artist_start.unwrap()].replace("\x00", "");
+        }
+
+        if song_style_start.is_some() {
+            if song_artist_start.unwrap() + BYTES_TO_SKIP < song_style_start.unwrap() {
+                artist = raw_track[song_artist_start.unwrap() + BYTES_TO_SKIP..song_style_start.unwrap()].replace("\x00", "");
+            }
+        }
+        else {
+            if song_artist_start.unwrap() + BYTES_TO_SKIP < song_end {
+                artist = raw_track[song_artist_start.unwrap() + BYTES_TO_SKIP..song_end].replace("\x00", "");
+            }
+        }
+    }
+    else if song_style_start.is_some() {
+        if song_title_start + BYTES_TO_SKIP < song_style_start.unwrap() {
+            title = raw_track[song_title_start + BYTES_TO_SKIP..song_style_start.unwrap()].replace("\x00", "");
+        }
     }
     else {
-        title = String::new();
+        if song_title_start + BYTES_TO_SKIP < song_end {
+            title = raw_track[song_title_start + BYTES_TO_SKIP..song_end].replace("\x00", "");
+        }
     }
 
-    if song_artist_start + BYTES_TO_SKIP < song_style_start {
-        artist = raw_track[song_artist_start + BYTES_TO_SKIP..song_style_start].replace("\x00", "");
-    }
-    else {
-        artist = String::new();
-    }
-
-
-    if song_style_start + BYTES_TO_SKIP <song_end {
-        style = raw_track[song_style_start + BYTES_TO_SKIP..song_end].replace("\x00", "");
-    }
-    else {
-        style = String::new();
+    if song_style_start.is_some() {
+        if song_style_start.unwrap() + BYTES_TO_SKIP < song_end {
+            style = raw_track[song_style_start.unwrap() + BYTES_TO_SKIP..song_end].replace("\x00", "");
+        }
     }
 
     Track {
