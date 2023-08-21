@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+clap = { version = "4.3.23", features = ["derive"] }
 colored = "2.0.4"
 encoding_rs = "0.8.32"
