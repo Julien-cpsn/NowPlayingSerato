@@ -27,3 +27,7 @@ You can add `-t` or `--tracks` to change the number of tracks to display. The de
 ```shell
 cargo run -- "C:\\Users\\<User>\\Music\\_Serato_" --tracks 5
 ```
+
+## Example
+
+![alt text](https://github.com/Julien-cpsn/NowPlayingSerato/blob/main/example.png)
